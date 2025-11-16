@@ -1,4 +1,4 @@
-from app.services.api_client import get_market_chart
+from app.services.coingecko_client import get_market_chart
 
 def test_get_market_chart():
     data = get_market_chart('bitcoin', 'usd', 7)
