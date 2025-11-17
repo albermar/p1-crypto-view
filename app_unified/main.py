@@ -36,10 +36,10 @@ class MarketChartResponse(BaseModel):
     prices: list[PricePoint]
 
     
-    
+#------------------BUSINESS LOGIC LAYER------------------#
 
 
-def fetch_market_chart_2_business(symbol: Symbol, currency: Currency, days: int)-> Dict[str, Any]:    
+def Business_fetch_data(symbol: Symbol, currency: Currency, days: int)-> Dict[str, Any]:    
     '''
     Business logic layer for fetching CoinGecko market charts.
     Steps:
@@ -52,17 +52,19 @@ def fetch_market_chart_2_business(symbol: Symbol, currency: Currency, days: int)
     params = MarketChartParams(symbol=symbol, currency=currency, days=days)
     
     # 2) Call HTTP client
-    data = get_market_chart_http_3(params.symbol.value, params.currency.value, params.days)    
+    data = HTTP_get_coingecko_raw_data(params.symbol.value, params.currency.value, params.days)    
     
     # 3 ) Minimal validation of structure of response
     if "prices" not in data:
         raise RuntimeError("Unexpected CoinGecko format: missing 'prices'")
     
     return data #RAW JSON
-#----------------------------------------------------------------#
 
 
-def get_market_chart_http_3(coin: str, currency: str, days: int) -> Dict[str, Any]:
+#------------------HTTP CLIENT LAYER------------------#
+
+
+def HTTP_get_coingecko_raw_data(coin: str, currency: str, days: int) -> Dict[str, Any]:
     """Call CoinGecko /market_chart and return the JSON payload.
 
     Example:
@@ -107,8 +109,8 @@ from fastapi import FastAPI, HTTPException
 
 app_unified = FastAPI(title="CoinGecko Market Chart API", version="1.0.0")
 
-@app_unified.get('/market_chart')
-def get_market_chart_endpoint_1(
+@app_unified.get('/data_raw')
+def FA_endpoint_raw(
     symbol: Symbol, 
     currency: Currency, 
     days: int):
@@ -121,7 +123,7 @@ def get_market_chart_endpoint_1(
     - days: int > 0
     """
     try:
-        data = fetch_market_chart_2_business(symbol, currency, days)
+        data = Business_fetch_data(symbol, currency, days)
         return data
     except ValidationError as e:
         #Problem with params (days <=0, invalid symbol, etc)        
@@ -132,7 +134,7 @@ def get_market_chart_endpoint_1(
         raise HTTPException(status_code=502, detail=str(e))    
 
 
-
+#------------------------------------------------------------#
 
 
 def convert_raw_to_clean_data(data: Dict[str, Any]) -> MarketChartResponse:
@@ -149,10 +151,14 @@ def convert_raw_to_clean_data(data: Dict[str, Any]) -> MarketChartResponse:
     
     prices: list[PricePoint] = []
     
-    for item in raw_prices:
+    for idx, item in enumerate(raw_prices):
         if not (isinstance(item, list) and len(item) == 2): 
-            raise ValueError("Invalid price point format")
-        ts_ms, price = item
+            raise ValueError(f"Invalid price point at index {idx}: expected [timestamp_ms, price], got {item!r}"            )        
+        ts_ms, price = item        
+        if not isinstance(ts_ms, (int, float)): 
+            raise ValueError(f"Invalid timestamp at index {idx}: expected int or float, got {ts_ms!r}")
+        if not isinstance(price, (int, float)):
+            raise ValueError(f"Invalid price at index {idx}: expected int or float, got {price!r}")
         
         ts = datetime.fromtimestamp(ts_ms / 1000.0)
         price_point = PricePoint(timestamp=ts, price=price)
@@ -161,11 +167,15 @@ def convert_raw_to_clean_data(data: Dict[str, Any]) -> MarketChartResponse:
     return MarketChartResponse(prices=prices)
 
 
-@app_unified.get('/market-chart/clean', 
+#------------------CLEAN ENDPOINT------------------#
+
+
+
+@app_unified.get('/data_clean', 
                  response_model = MarketChartResponse, 
                  summary="Get clean market chart data", 
                  description="Returns typed market chart data with timestamps and prices.")
-def get_market_chart_clean_endpoint(symbol: Symbol, currency: Currency, days: int):
+def FA_endpoint_clean(symbol: Symbol, currency: Currency, days: int):
     """
         Clean version of market-chart endpoint.
 
@@ -175,16 +185,22 @@ def get_market_chart_clean_endpoint(symbol: Symbol, currency: Currency, days: in
         - days: int > 0
         """
     try:
-        raw_data = fetch_market_chart_2_business(symbol, currency, days)
+        raw_data = Business_fetch_data(symbol, currency, days)
         clean_data = convert_raw_to_clean_data(raw_data)
         return clean_data
     except ValidationError as e:
         raise HTTPException(status_code=422, detail=e.errors())
+    
+    except ValueError as e:
+        raise HTTPException(
+            status_code=502, 
+            detail=f"Failed to parse CoinGecko data: {str(e)}"
+            )
     except RuntimeError as e:
         raise HTTPException(status_code=502, detail=str(e))
 
 
 if __name__ == "__main__":
-    data = fetch_market_chart_2_business(Symbol.BTC, Currency.EUR, 7) 
+    data = Business_fetch_data(Symbol.BTC, Currency.EUR, 7) 
     print(len(data["prices"]))
     print(data["prices"][:10])
