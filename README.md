@@ -24,28 +24,11 @@ app/
 
 High-level contract of each layer: what it does, what it validates and how errors flow.
 
-
 | Layer | Input | Output | Responsibility | Errors (Own/Input) | Errors (Received) | Errors (own/processes) |
 | --- | --- | --- | --- | --- | --- | --- |
 | **API** |  |  |  |  |  |  |
-| **Business** | - `Provider` (enum)
-- `Symbol` (enum)
-- `Currency` (enum)
-- days: `int` | Domain entity:
-    `MarketDataChart` | - Decide what infrastructure to call by provider
-- Call infrastructure to obtain raw data
-- Converts raw data to clean (Raw to `MarketDataChart` and `PricePoint`)
- | - `BusinessValidationError` (days ≤ 0 or empty params) 
-- `BusinessProviderNotCompatible` (symbol/currency not supported) | -  `BusinessProviderGeneralError` (we don’t have data)
-        ← ExternalApiTimeout
-        ← ExternalApiError  
-        ← ExternalApiMalformedResponse  |  |
-| **Infrastructure** | - Provider url: `str`
-- symbol: `str`
-- currency: `str`
-- days: `int` | - Raw Dict | - Call external API for raw data |  - `InfrastructureValidationError` (days ≤ 0 or empty params) |  - `InfrastructureExternalApiTimeout` ← httpx.TimeoutException
-- `InfrastructureExternalApiError`  ← (httpx.RequestError) or (non 2xx HTTP status)
- | - `InfrastructureExternalApiMalformedResponse` ← (JSON decode error) or (invalid/missing ‘prices’ key) |
+| **Business** | - `Provider` (enum)<br>-  `Symbol` (enum)<br>- `Currency` (enum)<br>- days: `int` | Domain entity:<br>    `MarketDataChart` | - Decide what infrastructure to call by provider<br>- Call infrastructure to obtain raw data<br>- Converts raw data to clean (Raw to `MarketDataChart` and `PricePoint`) | - `BusinessValidationError` (days ≤ 0 or empty params) <br>- `BusinessProviderNotCompatible` (symbol/currency not supported) | -  `BusinessProviderGeneralError` (we don’t have data)<br>        ← ExternalApiTimeout<br>        ← ExternalApiError  <br>        ← ExternalApiMalformedResponse  |  |
+| **Infrastructure** | - Provider url: `str`<br>- symbol: `str`<br>- currency: `str`<br>- days: `int` | - Raw Dict | - Call external API for raw data |  - `InfrastructureValidationError` (days ≤ 0 or empty params) | - `InfrastructureExternalApiTimeout` ← httpx.TimeoutException<br>- `InfrastructureExternalApiError`  ← (httpx.RequestError) or (non 2xx HTTP status) | - `InfrastructureExternalApiMalformedResponse` ← (JSON decode error) or (invalid/missing ‘prices’ key) |
 
 ## Domain entities
 
