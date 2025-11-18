@@ -39,6 +39,7 @@ class MarketChartResponse(BaseModel):
 #------------------BUSINESS LOGIC LAYER------------------#
 
 
+
 def Business_fetch_data(symbol: Symbol, currency: Currency, days: int)-> Dict[str, Any]:    
     '''
     Business logic layer for fetching CoinGecko market charts.
@@ -100,7 +101,6 @@ def HTTP_get_coingecko_raw_data(coin: str, currency: str, days: int) -> Dict[str
             f"Failed to parse JSON from CoinGecko for URL: {url}\n"
             f"Raw body: {response.text[:200]}"
         ) from exc
-
 
 
 #--------------------------------FAST API LAYER--------------------------------#
