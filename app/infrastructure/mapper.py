@@ -1,6 +1,8 @@
 from app.domain.entities import Symbol, Currency, Provider
 from typing import Dict
+from app.infrastructure.errors import InfrastructureProviderNotCompatibleError
 
+# -------- Mappers -------- #
 SymbolMap   = Dict[Symbol, str]
 CurrencyMap = Dict[Currency, str]
 
@@ -35,3 +37,24 @@ MAPPER_CURRENCY_PROVIDER: Dict[Provider, CurrencyMap] = {
         Currency.JPY : "???"
         }
     }
+# -------- End of mappers -------- #
+
+# -------- Mapping functions -------- #
+
+def map_provider_symbol_id(sym: Symbol, prov: Provider) -> str:    
+    try:
+        id_sym = MAPPER_SYMBOL_PROVIDER[prov][sym]
+        return id_sym
+    except KeyError:
+        raise InfrastructureProviderNotCompatibleError(f'Symbol: {sym} not supported by Provider: {prov}')
+
+def map_provider_currency_id(cur: Currency, prov: Provider) -> str:    
+    try:
+        id_cur = MAPPER_CURRENCY_PROVIDER[prov][cur]
+        return id_cur
+    except KeyError:
+        raise InfrastructureProviderNotCompatibleError(f'Currency: {cur} not supported by Provider: {prov}')
+
+# -------- End of mapping functions -------- #
+
+#TESTS IN: tests/test_provider_mapper.py
