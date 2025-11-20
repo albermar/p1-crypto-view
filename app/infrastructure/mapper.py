@@ -37,9 +37,7 @@ MAPPER_CURRENCY_PROVIDER: Dict[Provider, CurrencyMap] = {
         Currency.JPY : "???"
         }
     }
-# -------- End of mappers -------- #
 
-# -------- Mapping functions -------- #
 
 def map_provider_symbol_id(sym: Symbol, prov: Provider) -> str:    
     try:
@@ -54,7 +52,4 @@ def map_provider_currency_id(cur: Currency, prov: Provider) -> str:
         return id_cur
     except KeyError:
         raise InfrastructureProviderNotCompatibleError(f'Currency: {cur} not supported by Provider: {prov}')
-
-# -------- End of mapping functions -------- #
-
-#TESTS IN: tests/test_provider_mapper.py
+    

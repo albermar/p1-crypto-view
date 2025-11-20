@@ -31,6 +31,7 @@ class Provider(Enum):
     COINGECKO   = 'coingecko'
     BINANCE     = 'binance'
     KRAKEN      = 'kraken'
+    __UNSUPPORTED__ = '__unsupported__'
 
 #---
 

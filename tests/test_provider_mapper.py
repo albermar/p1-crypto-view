@@ -16,7 +16,7 @@ TEST_SYMBOL_ID_OK = [
 
 TEST_SYMBOL_SUPPORTED  = [
     (Symbol.BTC, Provider.COINGECKO),
-    (Symbol.ETH, Provider.COINGECKO,),
+    (Symbol.ETH, Provider.COINGECKO),
     (Symbol.XRP, Provider.COINGECKO)
 ]
 
