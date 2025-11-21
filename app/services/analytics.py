@@ -7,43 +7,55 @@ from datetime import datetime
 
 def convert_market_chart_data_to_dataframe(marketchartdata: MarketChartData) -> pd.DataFrame:
     data = {
-        'datetime'  : [p.timestamp for p in marketchartdata.points],
+        'timestamp'  : [p.timestamp for p in marketchartdata.points],
         'price'     : [p.price for p in marketchartdata.points]
-    }  
-    df = pd.DataFrame(data)
-    return df
+    }
+    return pd.DataFrame(data)
     
 
-def compute_stats(df: pd.DataFrame, numeric_key: str):
+def compute_stats(df: pd.DataFrame, stats_key: str) -> dict:
     """
     Compute basic statistics for a numeric column in a price DataFrame.
-
-    Expected df columns:
-      - timestamp: datetime
-      - <numeric_key>: float (e.g. "price")
     """
-    if (df.empty):
+    if df.empty:
         raise ValueError('Cannot compute stats on an empty DataFrame')
-    if(numeric_key == '' or numeric_key is None):
+    if not stats_key or not isinstance(stats_key, str):
         raise ValueError('numeric_key must be a non-empty string (e.g. "price")')
-    if(numeric_key not in df):
-        raise KeyError(f'{numeric_key} not found inside the DataFrame')
+    if stats_key not in df.columns:
+        raise KeyError(f"Column '{stats_key}' not found in DataFrame")
     
-    series = df[numeric_key]
+    series = df[stats_key]
+    
+    if series.isna().all():
+        raise ValueError(f'All values in the column {stats_key} are NaN, cannot compute statistics.')
     
     result_dic = {
-        'count':        len(df),
-        'min':          series.min(),
-        'max':          series.max(),
-        'mean':         series.mean(),
-        'median':       series.median(),
-        'std':          series.std(),
-        'first_price':  series.iloc[0],
-        'last_price':   series.iloc[-1],
-        'percent_change': ((series.iloc[-1] - series.iloc[0]) / series.iloc[0]) * 100
+        "count": int(series.count()),
+        "min_price": float(series.min()),
+        "max_price": float(series.max()),
+        "mean_price": float(series.mean()),
+        "median_price": float(series.median()),
+        "std_dev": float(series.std()),
+        "variance": float(series.var()),
+        "first_price": float(series.iloc[0]),
+        "last_price": float(series.iloc[-1]),
+        "percent_change": float((series.iloc[-1] - series.iloc[0]) / series.iloc[0] * 100),
     }
-    return result_dic    
     
+    return result_dic
+    
+    
+
+
+        
+        
+        
+        
+        
+    
+    
+
+
 
 if __name__ == "__main__":    
     #test convert_market_chart_data_to_dataframe witha  marketchart data example:

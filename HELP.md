@@ -9,3 +9,4 @@
 
 ## Next Steps
 1. Build analytics on top with pandas + plotly (later)
+    a) /market_chart/stats: Compute: min, max, mean, median, std, first_price, last_price, % change

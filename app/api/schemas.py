@@ -11,10 +11,7 @@ class PricePointResponse(BaseModel):
         timestamp = domain_price_point.timestamp
         price = domain_price_point.price 
         
-        return cls(timestamp=timestamp, price=price)
-        
-        
-        
+        return cls(timestamp=timestamp, price=price)     
 
 class MarketChartResponse(BaseModel):
     symbol: Symbol
@@ -33,6 +30,49 @@ class MarketChartResponse(BaseModel):
         #pts = [PricePointResponse.from_domain(p) for p in domain_market_chart_data.points]
         return cls(symbol=sym, currency=cur, points=pts)
 
-            
+class StatsResponse(BaseModel):
+    count: int
+    min_price: float
+    max_price: float
+    mean_price: float
+    median_price: float
+    std_dev: float
+    variance: float
+    first_price: float
+    last_price: float
+    percent_change: float
+
+    @classmethod
+    def from_dict(cls, dict_stats: dict) -> 'StatsResponse':
+        return cls(**dict_stats) #cleaner and professional way to do it
+    
+    '''
+    @classmethod
+    def from_dict(cls, dict_stats: dict) -> 'StatsResponse':
+        count = dict_stats['count']
+        min_price = dict_stats['min_price']
+        max_price = dict_stats['max_price']
+        mean_price = dict_stats['mean_price']
+        median_price = dict_stats['median_price']
+        std_dev = dict_stats['std_dev']
+        variance = dict_stats['variance']
+        first_price = dict_stats['first_price']
+        last_price = dict_stats['last_price']
+        percent_change = dict_stats['percent_change']
+        return cls(
+            count=count,
+            min_price=min_price,
+            max_price=max_price,
+            mean_price=mean_price,
+            median_price=median_price,
+            std_dev=std_dev,
+            variance=variance,
+            first_price=first_price,
+            last_price=last_price,
+            percent_change=percent_change
+        )
+        '''
+
+ 
             
 

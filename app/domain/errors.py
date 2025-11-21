@@ -12,3 +12,6 @@ class BusinessMalformedDataError(Exception):
 
 class BusinessNoDataError(Exception):
     pass
+
+class BusinessComputationError(Exception):
+    pass
