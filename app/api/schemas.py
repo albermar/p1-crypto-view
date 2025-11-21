@@ -1,6 +1,8 @@
 from datetime import datetime
+from typing import Any
 from pydantic import BaseModel
 from app.domain.entities import Symbol, Currency, MarketChartData, PricePoint
+import pandas as pd
 
 class PricePointResponse(BaseModel):
     timestamp: datetime
@@ -73,6 +75,17 @@ class StatsResponse(BaseModel):
         )
         '''
 
- 
-            
-
+class DataFrameResponse(BaseModel):
+    columns: list[str]
+    rows: list[list[Any]]
+    
+    @classmethod
+    def from_dataframe(cls, df: pd.DataFrame) -> 'DataFrameResponse':
+        columns =  list(df.columns)
+        rows = df.values.tolist()
+        return cls(columns=columns, rows=rows)
+        
+        
+        
+        
+        

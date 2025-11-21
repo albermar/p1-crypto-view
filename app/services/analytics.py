@@ -11,7 +11,6 @@ def convert_market_chart_data_to_dataframe(marketchartdata: MarketChartData) -> 
         'price'     : [p.price for p in marketchartdata.points]
     }
     return pd.DataFrame(data)
-    
 
 def compute_stats(df: pd.DataFrame, stats_key: str) -> dict:
     """
@@ -44,7 +43,7 @@ def compute_stats(df: pd.DataFrame, stats_key: str) -> dict:
     
     return result_dic
     
-    
+
 
 
         
