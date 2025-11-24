@@ -57,12 +57,19 @@ def calculate_stats(df: pd.DataFrame, stats_key: str) -> dict:
 
 def compute_returns (df: pd.DataFrame, stats_key: str) -> None:
     series = _validate_numeric_series(df, stats_key)
-    df['pct_change'] = series.pct_change() * 100    
-    df['acum_pct_change'] = (series - series.iloc[0]) / series.iloc[0] * 100   
+    df['pct_change'] = series.pct_change() * 100
+    df['acum_pct_change'] = (series - series.iloc[0]) / series.iloc[0] * 100
     #no return, it adds columns to the df
 
-def compute_rolling_window(df: pd.DataFrame, window_size: int, stats_key: str) -> None:
+def compute_rolling_window(df: pd.DataFrame, window_size: int, stats_key: str) -> None:    
     series = _validate_numeric_series(df, stats_key)
+    
+    #window size must be >0 and less than length of series
+    if window_size <=0:
+        raise ValueError('window_size must be a positive integer')
+    if window_size > len(series):
+        raise ValueError('window_size cannot be larger than the number of data points in the DataFrame')
+    
     df[f'rolling_mean_{window_size}'] = series.rolling(window=window_size).mean()
     #no return, it adds column to the df
 
@@ -110,7 +117,7 @@ def normalize_series(df: pd.DataFrame, price_key: str, base: float = 100.0) -> N
     first = series.iloc[0]
     if first == 0:
         raise ValueError(f'Cannot normalize series of {price_key} if first element is Zero')
-    df[f'normalized_{price_key}_base_{base}'] = (series / first) * base
+    df[f'normalized_{price_key}_base_{round(float(base), 5)}'] = (series / first) * base
     #no return, modifies df in place
 
 def compute_volatility(df: pd.DataFrame, price_key: str, window_size: int) -> None:

@@ -115,7 +115,7 @@ def compute_enriched_market_chart(
         # 5) Always compute returns
         compute_returns(df, 'price')
         
-        # 6) Optional rolling mean
+        # 6) Optional rolling
         if window_size is not None:
             if window_size <= 0:
                 raise ValueError(f'Window size must be greater than 0. Got {window_size}')
