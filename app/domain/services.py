@@ -71,19 +71,10 @@ def compute_market_chart_stats(
         stats = compute_stats(df = df, stats_key='price')    
     except (ValueError, KeyError) as e:
         raise errors_domain.BusinessComputationError(f'Error computing statistics from market chart data: {e}')
-    return stats    
+    return stats
 
 
-def compute_returns(
-    symbol: Symbol, 
-    currency: Currency, 
-    days: int, 
-    provider: Provider = DEFAULT_PROVIDER 
-    ) -> dict:  
-    pass
-
-if __name__ == "__main__":
-    
+if __name__ == "__main__":    
     #Simple test of the service function
     try:
         chart = fetch_market_chart(Symbol.BTC, Currency.USD, 20, Provider.COINGECKO)

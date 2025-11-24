@@ -54,3 +54,17 @@ class MarketChartData:
         self.currency = curr
         self.points = pts #Reference assignment, no copy of the list, keep in mind.
         
+
+class ResampleFrequency(Enum):
+    DAILY       = 'daily'
+    WEEKLY      = 'weekly'
+    MONTHLY     = 'monthly'
+    YEARLY      = 'yearly'
+    __UNSUPPORTED__ = '__unsupported__'
+    
+PANDAS_RESAMPLING_RULES = {
+    ResampleFrequency.DAILY: 'D',
+    ResampleFrequency.WEEKLY: 'W-SUN',  # Week ends on Sunday
+    ResampleFrequency.MONTHLY: 'M',
+    ResampleFrequency.YEARLY: 'Y'
+}
