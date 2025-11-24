@@ -1,8 +1,18 @@
-from app.domain.entities import Symbol, Currency, Provider, MarketChartData
+from app.domain.entities import Symbol, Currency, Provider, MarketChartData, PricePoint, ResampleFrequency
 from app.infrastructure.coingecko import infra_get_parsed_market_chart_coingecko
 from app.infrastructure import errors as errors_infra
 from app.domain import errors as errors_domain
-from app.services.analytics import convert_market_chart_data_to_dataframe, compute_stats
+import pandas as pd
+from app.services.analytics import (
+    convert_market_chart_data_to_dataframe,
+    compute_returns,
+    compute_rolling_window,
+    resample_price_series,
+    trim_date_range,
+    normalize_series,
+    compute_volatility,
+)
+from datetime import datetime
 
 DEFAULT_PROVIDER = Provider.COINGECKO
 #Business layer services
@@ -73,6 +83,62 @@ def compute_market_chart_stats(
         raise errors_domain.BusinessComputationError(f'Error computing statistics from market chart data: {e}')
     return stats
 
+# Use case 3: Compute enriched market chart data with optional analytics using pandas
+
+def compute_enriched_market_chart(
+    symbol: Symbol,
+    currency: Currency,
+    days: int,
+    provider: Provider,
+    frequency: ResampleFrequency | None = None,
+    window_size: int | None = None,
+    normalize_base: float | None = None,
+    volatility_window: int | None = None,
+    start: datetime | None = None,
+    end: datetime | None = None,
+) -> pd.DataFrame:
+    
+    # 1) Fetch raw chart
+    raw_chart: MarketChartData = fetch_market_chart(symbol, currency, days, provider)
+    
+    # 2) Domain -> DataFrame
+    df = convert_market_chart_data_to_dataframe(raw_chart)
+    
+    try:    
+        # 3) Optional range trim
+        df = trim_date_range(df, start, end)
+        
+        #4) Optional resampling
+        if frequency is not None:
+            df = resample_price_series(df, 'price', frequency)
+        
+        # 5) Always compute returns
+        compute_returns(df, 'price')
+        
+        # 6) Optional rolling mean
+        if window_size is not None:
+            if window_size <= 0:
+                raise ValueError(f'Window size must be greater than 0. Got {window_size}')
+            compute_rolling_window(df, window_size, "price")
+        
+        # 7) Optional volatility
+        if volatility_window is not None:
+            if volatility_window <= 1:
+                raise ValueError(f'Volatility window must be greater than 1. Got {volatility_window}')
+            compute_volatility(df, "price", volatility_window)
+        
+        # 8) Optional normalization
+        if normalize_base is not None:
+            normalize_series(df, "price", normalize_base)
+    except (KeyError, ValueError) as e:
+        raise errors_domain.BusinessComputationError(f'Error computing enriched market chart with pandas {e}')
+    
+    return df
+    
+    
+
+    
+    
 
 if __name__ == "__main__":    
     #Simple test of the service function

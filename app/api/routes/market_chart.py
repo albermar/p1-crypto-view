@@ -1,9 +1,11 @@
+from typing import Optional
 from fastapi import APIRouter, HTTPException
 from app.api.schemas import MarketChartResponse, StatsResponse, DataFrameResponse
-from app.domain.entities import Symbol, Currency, Provider
-from app.domain.services import fetch_market_chart, compute_market_chart_stats
+from app.domain.entities import ResampleFrequency, Symbol, Currency, Provider
+from app.domain.services import fetch_market_chart, compute_market_chart_stats, compute_enriched_market_chart
 from app.domain import errors
 from app.services.analytics import convert_market_chart_data_to_dataframe
+from datetime import datetime
 
 
 router = APIRouter(prefix = '/market_chart', tags = ['market-chart'])
@@ -69,9 +71,40 @@ def get_market_chart_stats(symbol: Symbol, currency: Currency, days: int, provid
 @router.get('/dataframe', response_model = DataFrameResponse,
             summary = 'Fetch market chart data as DataFrame',
             description='Retrieve historical market chart data for a specified cryptocurrency, currency, and number of days in a tabular DataFrame format.')
-def get_market_chart_dataframe(symbol: Symbol, currency: Currency, days: int, provider: Provider):
+def get_market_chart_dataframe(
+    symbol: Symbol, 
+    currency: Currency, 
+    days: int, 
+    provider: Provider, 
+    frequency: Optional[ResampleFrequency] = None,
+    window_size: Optional[int] = None,
+    normalize_base: Optional[float] = None,
+    volatility_window: Optional[int] = None,
+    start: Optional[datetime] = None,
+    end: Optional[datetime] = None,
+    ):
+    """
+    Endpoint returning an enriched DataFrame:
+    - timestamp, price
+    - pct_change, acum_pct_change
+    - rolling mean (if window_size)
+    - volatility (if volatility_window)
+    - normalized price (if normalize_base)
+    - plus weekly fields if resampled to weekly
+    """
     try:
-        data = fetch_market_chart(symbol, currency, days, provider) #Domain entity MarketChartData        
+        df = compute_enriched_market_chart(
+            symbol=symbol,
+            currency=currency,
+            days=days,
+            provider=provider,
+            frequency=frequency,
+            window_size=window_size,
+            normalize_base=normalize_base,
+            volatility_window=volatility_window,
+            start=start,
+            end=end,
+        )    
          
     except errors.BusinessValidationError as e:
         raise HTTPException(status_code=400, detail=str(e))     
@@ -86,12 +119,13 @@ def get_market_chart_dataframe(symbol: Symbol, currency: Currency, days: int, pr
         raise HTTPException(status_code=500, detail=str(e))     
     
     except errors.BusinessNoDataError as e:
-        raise HTTPException(status_code=404, detail=str(e))     
+        raise HTTPException(status_code=404, detail=str(e)) 
+       
+    except errors.BusinessComputationError as e:
+        # raised by compute_enriched_market_chart when pandas layer fails
+        raise HTTPException(status_code=500, detail=str(e)) 
     
-    #Convert to DataFrame
-    df = convert_market_chart_data_to_dataframe(data)
-    
-    #Convert DataFrame to DataFrameResponse
+    #Convert Enriched DataFrame to DataFrameResponse
     return DataFrameResponse.from_dataframe(df)
 
 
