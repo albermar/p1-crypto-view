@@ -16,6 +16,8 @@
 
 A structured backend application that retrieves live crypto data, enriches it with pandas analytics, and exposes JSON and PNG plots through a fully modular FastAPI design.
 
+--> Live API: https://crypto-analytics-engine.onrender.com
+
 ![Example](./outputs/Example.png)
 
 ## 📚 Table of Contents
