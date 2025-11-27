@@ -1,5 +1,3 @@
-#Here I'm going to create the function that will ask coingecko for market data and return the raw data as dictionary
-
 from datetime import datetime
 from app.infrastructure import errors
 from app.domain.entities import Symbol, Currency, Provider
@@ -8,12 +6,14 @@ from app.domain.entities import PricePoint, MarketChartData
 
 import httpx 
 
+# 3) High level function to get parsed market chart data from CoinGecko API -> returns MarketChartData (domain entity)
 def infra_get_parsed_market_chart_coingecko(    sym: Symbol,     curr: Currency,     days: int) -> MarketChartData:
     raw_data =      infra_get_raw_market_chart_coingecko(sym, curr, days)    
     clean_data =    infra_clean_raw_market_chart_coingecko(raw_data, 'prices')
     market_chart = MarketChartData(sym, curr, clean_data)
     return market_chart
 
+# 1 ) Function to get raw market chart data from CoinGecko API -> returns the raw JSON data as a dict
 def infra_get_raw_market_chart_coingecko(    sym: Symbol,     curr: Currency,     days: int) -> dict:
     '''
     Fetch market chart data from CoinGecko API.
@@ -70,6 +70,7 @@ def infra_get_raw_market_chart_coingecko(    sym: Symbol,     curr: Currency,   
     #in this point we have the parsed JSON data. 
     return parsed_data
 
+# 2 ) Function to clean the raw market chart data from CoinGecko API -> returns a list of PricePoint (domain entity)
 def infra_clean_raw_market_chart_coingecko(raw_data: dict, mandatory_key: str = 'prices') -> list[PricePoint]:
     #raw data must have the 'prices' field
     if (mandatory_key not in raw_data) or (not isinstance(raw_data[mandatory_key], list)):
@@ -82,10 +83,3 @@ def infra_clean_raw_market_chart_coingecko(raw_data: dict, mandatory_key: str = 
         price_points.append(price_point)        
     return price_points
 
-
-
-if __name__ == "__main__":
-    data = infra_get_parsed_market_chart_coingecko(Symbol.BTC, Currency.USD, 1)    
-    for x in data.points:
-        print(f'Time: {x.timestamp}, Price: {x.price}')
-    print(f'Nº of points: {len(data.points  )}')
